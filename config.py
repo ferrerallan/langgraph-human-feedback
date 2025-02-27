@@ -1,19 +1,18 @@
 import os
 from dotenv import load_dotenv
+import openai
 
-# Load environment variables
 load_dotenv()
 
-# OpenAI API configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4")
+openai.api_key = OPENAI_API_KEY
 
-# Vector database configuration
-VECTOR_DB_DIR = os.getenv("VECTOR_DB_DIR", "./chroma_db")
+LLM_MODEL = "gpt-4"
 
-# Feedback system configuration
-MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", "3"))
-SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", "0.5"))
+VECTOR_DB_PATH = "./chroma_db"
 
-# Checkpoint configuration
-CHECKPOINT_DB = os.getenv("CHECKPOINT_DB", "checkpoints.sqlite")
+SQLITE_DB_PATH = "checkpoints.sqlite"
+
+SIMILARITY_THRESHOLD = 0.5
+MAX_SIMILAR_RESULTS = 2
+MAX_RETRY_ATTEMPTS = 3

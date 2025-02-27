@@ -1,29 +1,15 @@
+"""
+Service for interactions with language models.
+"""
 import openai
-from typing import Optional
-
-from config import OPENAI_API_KEY, LLM_MODEL
+from config import LLM_MODEL
 
 class LLMService:
-    LIGHT_BLUE = '\033[94m'
-    END_COLOR = '\033[0m'
-
     def __init__(self):
-        openai.api_key = OPENAI_API_KEY
-
-    def blue_print(self, text):
-        """Print text in light blue color."""
-        print(f"{self.LIGHT_BLUE}{text}{self.END_COLOR}")
+        self.model = LLM_MODEL
     
-    def generate_response(self, question: str) -> str:
-        """
-        Generate a response to the given question using the LLM.
-        
-        Args:
-            question: The question to answer
-            
-        Returns:
-            Generated response
-        """
+    def generate_response(self, question):
+        """Generates a response to the question using the LLM."""
         prompt = f"""
         Current question: {question}
         
@@ -31,7 +17,7 @@ class LLMService:
         """
         
         response = openai.chat.completions.create(
-            model=LLM_MODEL,
+            model=self.model,
             messages=[
                 {"role": "system", "content": "You are an expert assistant that provides accurate and helpful answers."},
                 {"role": "user", "content": prompt}
@@ -40,30 +26,51 @@ class LLMService:
         
         return response.choices[0].message.content
     
-    def regenerate_with_feedback(self, question: str, feedback: str) -> str:
-        """
-        Regenerate a response based on feedback.
+    def adapt_response(self, question, stored_question, stored_response):
+        """Adapts a stored response to a new similar question."""
+        prompt = f"""
+        I have a stored response for this question:
+        "{stored_question}"
         
-        Args:
-            question: Original question
-            feedback: User feedback for improvement
-            
-        Returns:
-            Regenerated response
+        The stored response is:
+        "{stored_response}"
+        
+        Now I need to answer this new question:
+        "{question}"
+        
+        Please adapt the stored response to answer the new question.
+        Keep the same format and level of detail, but modify the content 
+        to match the specific requirements of the new question.
         """
+        
+        response = openai.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "You are an expert assistant that adapts existing answers to new contexts."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        return response.choices[0].message.content
+    
+    def regenerate_with_feedback(self, question, feedback, previous_responses=None):
+        """Regenerates a response based on user feedback."""
+        if previous_responses is None:
+            previous_responses = []
+            
         prompt = f"""
         Question: {question}
-        
+
         USER FEEDBACK: "{feedback}"
-        
+
         Generate a new response that takes this feedback into account.
         Be very specific in following EXACTLY what the feedback asks.
         If the feedback mentions the response should be shorter, make it significantly shorter.
         If the feedback mentions limiting to certain aspects, focus ONLY on those aspects.
         """
-        
+
         response = openai.chat.completions.create(
-            model=LLM_MODEL,
+            model=self.model,
             messages=[
                 {"role": "system", "content": "You are an assistant that rigorously follows user feedback. Adapt your response exactly as requested, without adding unrequested content."},
                 {"role": "user", "content": prompt}
