@@ -4,6 +4,13 @@ Node responsible for generating initial responses to questions.
 from graph.state import State
 from services.vector_db import VectorDBService
 from services.llm_service import LLMService
+from dotenv import find_dotenv, load_dotenv
+import os
+
+env_file = find_dotenv()
+load_dotenv(env_file)
+
+print("Using .env file:", env_file)
 
 class GenerateResponseNode:
     def __init__(self):
